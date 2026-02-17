@@ -190,3 +190,35 @@ END //
 DELIMITER ;
 UPDATE tasks SET title = 'Test late' 
 WHERE id = 1;
+
+INSERT INTO tasks (title, priority, deadline, completed, user_id)
+VALUE ('Test insert  Late', 'high', '2024-01-01', FALSE, 1);
+
+CREATE OR REPLACE VIEW view_dashboard AS 
+SELECT COUNT(*) AS total_tasks,
+	SUM(completed = TRUE) AS completed_tasks,
+	SUM(late = TRUE) AS late_tasks, 
+    SUM(priority = 'high') AS high_priority_tasks,
+		ROUND(SUM(completed = TRUE) / COUNT(*) * 100, 2) AS completion_rate_percent
+        FROM tasks;
+    
+    ALTER TABLE tasks 
+    CHANGE statue status VARCHAR(50);
+CREATE OR REPLACE VIEW view_dashboard
+AS 
+SELECT u.username, 
+COUNT(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END)
+AS completed_tasks,
+        
+SUM(CASE 
+ WHEN t.deadline < CURDATE() AND t.status != 'completed' THEN 1 ELSE 0 END ) AS late_tasks,
+ ROUND(
+ (
+		SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) * 100.0 / COUNT(t.id)
+        ),
+        2)AS completion_rate
+        
+FROM users u 
+LEFT JOIN tasks t ON u.id = t.user_id 
+GROUP BY u.username;
+DESCRIBE tasks;
