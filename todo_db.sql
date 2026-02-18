@@ -221,4 +221,4 @@ SUM(CASE
 FROM users u 
 LEFT JOIN tasks t ON u.id = t.user_id 
 GROUP BY u.username;
-DESCRIBE tasks;
+
