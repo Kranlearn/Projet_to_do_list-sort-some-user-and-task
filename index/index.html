@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Christophe Dev — Todo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --surface: #ffffff;
+      --border: #e8e8e4;
+      --border-dark: #c8c8c0;
+      --text: #1a1a18;
+      --muted: #8a8a80;
+      --accent: #1a1a18;
+      --danger: #c0392b;
+      --done-bg: #f4f4f0;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Geist Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .header-meta {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* Main layout */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 24px 120px;
+    }
+
+    /* Page title */
+    .page-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(2.4rem, 5vw, 3.2rem);
+      font-weight: 400;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .page-title em {
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .page-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 48px;
+      letter-spacing: 0.04em;
+      animation: fadeUp 0.5s 0.05s ease both;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 40px;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-family: 'Instrument Serif', serif;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    /* Form */
+    .add-form {
+      display: flex;
+      gap: 0;
+      margin-bottom: 40px;
+      border: 1px solid var(--border-dark);
+      border-radius: 2px;
+      overflow: hidden;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
+      animation: fadeUp 0.5s 0.15s ease both;
+    }
+
+    .add-form:focus-within {
+      border-color: var(--text);
+    }
+
+    #taskInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 14px 18px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 13px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    #taskInput::placeholder { color: var(--muted); }
+
+    .add-btn {
+      border: none;
+      border-left: 1px solid var(--border);
+      background: var(--text);
+      color: #fff;
+      padding: 14px 20px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .add-btn:hover { background: #333; }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      padding: 6px 14px;
+      cursor: pointer;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover { border-color: var(--border-dark); color: var(--text); }
+    .filter-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+    /* Table */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.5s 0.25s ease both;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 12px 20px;
+      font-weight: 500;
+    }
+
+    th:last-child { text-align: right; }
+
+    /* Task rows */
+    .task-row {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      animation: rowIn 0.3s ease both;
+    }
+
+    .task-row:last-child { border-bottom: none; }
+    .task-row:hover { background: var(--bg); }
+    .task-row.done-row { background: var(--done-bg); }
+
+    td {
+      padding: 14px 20px;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .task-check-cell {
+      width: 40px;
+      padding-right: 0;
+    }
+
+    .check-box {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid var(--border-dark);
+      border-radius: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .check-box:hover { border-color: var(--text); }
+    .check-box.checked { background: var(--text); border-color: var(--text); }
+    .check-box.checked::after {
+      content: '';
+      width: 9px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .task-title {
+      color: var(--text);
+      transition: color 0.15s;
+    }
+
+    .done-row .task-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+    }
+
+    .badge-todo { background: #f0f0ec; color: var(--muted); }
+    .badge-done { background: #e8f5e9; color: #2e7d32; }
+
+    .actions-cell {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .btn-delete {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px;
+      padding: 4px 10px;
+      cursor: pointer;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+      transition: all 0.15s;
+    }
+
+    .btn-delete:hover { border-color: var(--danger); color: var(--danger); background: #fff5f5; }
+
+    /* Empty state */
+    .empty-state {
+      padding: 56px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+
+    /* Connection status */
+    .conn-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      padding: 10px 16px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 2px;
+    }
+
+    .conn-bar.ok { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
+    .conn-bar.hidden { display: none; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Christophe Dev</div>
+  <div class="header-meta">TASK MANAGER</div>
+</header>
+
+<main>
+  <h1 class="page-title">Mes tâches<br><em>du jour</em></h1>
+  <p class="page-subtitle">Connecté à l'API locale · localhost:3000</p>
+
+  <div class="stats-row">
+    <div class="stat-pill">
+      <span class="stat-num" id="totalCount">0</span>
+      <span>tâches</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-num" id="doneCount">0</span>
+      <span>terminées</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-num" id="pendingCount">0</span>
+      <span>en cours</span>
+    </div>
+  </div>
+
+  <div class="conn-bar" id="connBar">
+    ⚠ Connexion à l'API en cours...
+  </div>
+
+  <div class="add-form">
+    <input type="text" id="taskInput" placeholder="Nouvelle tâche..." autocomplete="off" />
+    <button class="add-btn" id="addBtn">+ AJOUTER</button>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">Toutes</button>
+    <button class="filter-btn" data-filter="todo">En cours</button>
+    <button class="filter-btn" data-filter="done">Terminées</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Tâche</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tasksBody">
+        <tr><td colspan="4"><div class="empty-state">Chargement...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  const API = 'http://localhost:3000/tasks';
+  let tasks = [];
+  let currentFilter = 'all';
+
+  // ── Fetch all tasks ──────────────────────────────────────
+  async function fetchTasks() {
+    try {
+      const res = await fetch(API);
+      if (!res.ok) throw new Error();
+      tasks = await res.json();
+      setConnStatus(true);
+    } catch {
+      setConnStatus(false);
+      tasks = [];
+    }
+    renderTasks();
+  }
+
+  // ── Add a task ───────────────────────────────────────────
+  async function addTask() {
+    const input = document.getElementById('taskInput');
+    const title = input.value.trim();
+    if (!title) return;
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, done: false })
+      });
+      if (!res.ok) throw new Error();
+      input.value = '';
+      fetchTasks();
+    } catch {
+      alert('Impossible d\'ajouter la tâche. Vérifie que le serveur tourne.');
+    }
+  }
+
+  // ── Toggle done ──────────────────────────────────────────
+  async function toggleTask(id, currentDone) {
+    try {
+      await fetch(`${API}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ done: !currentDone })
+      });
+      fetchTasks();
+    } catch {
+      alert('Impossible de mettre à jour la tâche.');
+    }
+  }
+
+  // ── Delete a task ────────────────────────────────────────
+  async function deleteTask(id) {
+    try {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      fetchTasks();
+    } catch {
+      alert('Impossible de supprimer la tâche.');
+    }
+  }
+
+  // ── Render ───────────────────────────────────────────────
+  function renderTasks() {
+    const body = document.getElementById('tasksBody');
+    const filtered = tasks.filter(t => {
+      if (currentFilter === 'done') return t.done;
+      if (currentFilter === 'todo') return !t.done;
+      return true;
+    });
+
+    // Update stats
+    document.getElementById('totalCount').textContent = tasks.length;
+    document.getElementById('doneCount').textContent = tasks.filter(t => t.done).length;
+    document.getElementById('pendingCount').textContent = tasks.filter(t => !t.done).length;
+
+    if (filtered.length === 0) {
+      body.innerHTML = `<tr><td colspan="4"><div class="empty-state">Aucune tâche ici.</div></td></tr>`;
+      return;
+    }
+
+    body.innerHTML = filtered.map(task => `
+      <tr class="task-row ${task.done ? 'done-row' : ''}">
+        <td class="task-check-cell">
+          <div class="check-box ${task.done ? 'checked' : ''}" onclick="toggleTask(${task.id}, ${task.done})"></div>
+        </td>
+        <td class="task-title">${escapeHtml(task.title)}</td>
+        <td>
+          <span class="status-badge ${task.done ? 'badge-done' : 'badge-todo'}">
+            ${task.done ? 'Terminé' : 'En cours'}
+          </span>
+        </td>
+        <td class="actions-cell">
+          <button class="btn-delete" onclick="deleteTask(${task.id})">Supprimer</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+  function setConnStatus(ok) {
+    const bar = document.getElementById('connBar');
+    if (ok) {
+      bar.textContent = '✓ API connectée';
+      bar.classList.add('ok');
+      setTimeout(() => bar.classList.add('hidden'), 2000);
+    } else {
+      bar.textContent = '⚠ API non disponible — démarre ton serveur Node.js';
+      bar.classList.remove('ok', 'hidden');
+    }
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Events ───────────────────────────────────────────────
+  document.getElementById('addBtn').addEventListener('click', addTask);
+  document.getElementById('taskInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderTasks();
+    });
+  });
+
+  // ── Init ─────────────────────────────────────────────────
+  fetchTasks();
+</script>
+
+</body>
+</html>
